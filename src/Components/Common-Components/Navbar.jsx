@@ -23,7 +23,7 @@ const Navbar = () => {
   // console.log(patheName);
 
   return (
-    <nav className="w-full sticky top-0 z-50">
+    <nav className="w-full sticky top-0 z-50 bg-white">
       <div className="flex items-center justify-between gap-10 px-5 md:px-60">
         <div>
           <Link href={"/"}>
@@ -46,11 +46,14 @@ const Navbar = () => {
         </div>
         <div className="flex items-center gap-4 text-sm font-medium justify-self-end">
           <div className="hidden md:flex items-center gap-4">
-            <Link href="/signin" className="text-gray-700 hover:text-gray-900">
+            <Link
+              href="/auth/signin"
+              className="text-gray-700 hover:text-gray-900"
+            >
               Signin
             </Link>
             <Link
-              href="/signup"
+              href="/auth/signup"
               className="bg-[#4F46E5] py-3 px-5 flex items-center justify-center text-white font-bold rounded-xl"
             >
               Get Started
