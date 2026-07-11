@@ -1,14 +1,19 @@
 "use client";
 
-import { useState } from "react"; // পাসওয়ার্ড টগল স্টেটের জন্য
+import { useState } from "react";
 import logo from "@/Components/logo/logo";
 import Image from "next/image";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
+import { signIn } from "@/lib/auth-client";
+import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
 
 const SignIn = () => {
   const { logoWithIcon } = logo();
-  const [showPassword, setShowPassword] = useState(false); // পাসওয়ার্ড ভিজিবিলিটি স্টেট
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const {
     register,
@@ -16,15 +21,51 @@ const SignIn = () => {
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => {
-    console.log(data);
+  const onSubmit = async (data) => {
+    setLoading(true);
+    try {
+      const { data: response, error } = await signIn.email({
+        email: data.email,
+        password: data.password,
+      });
+
+      if (error) {
+        console.error("SignIn Error:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Sign In Failed",
+          text: error.message,
+        });
+        return;
+      }
+
+      await Swal.fire({
+        icon: "success",
+        title: "Welcome Back!",
+        text: "You have signed in successfully",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      router.push("/");
+
+      console.log("From Data", response);
+    } catch (error) {
+      console.error("Unexpected Error:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Something Went Wrong",
+        text:
+          error.message || "একটি অপ্রত্যাশিত সমস্যা হয়েছে। আবার চেষ্টা করুন।",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8 py-12">
-      {/* ফর্মের মূল কার্ড কন্টেইনার */}
       <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-100 space-y-8">
-        {/* হেডার অংশ (লোগো এবং টেক্সট) */}
         <div className="flex flex-col items-center text-center space-y-3">
           {logoWithIcon && (
             <div className="relative w-12 h-12">
@@ -37,16 +78,14 @@ const SignIn = () => {
             </div>
           )}
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-            Sign in to your Account
+            Welcome Back
           </h1>
           <p className="text-sm text-gray-500">
-            Welcome back! Please enter your details.
+            Please enter your details to sign in.
           </p>
         </div>
 
-        {/* ফর্ম এলিমেন্ট */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          {/* ইমেইল ইনপুট ফিল্ড */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-gray-700">
               Email Address
@@ -72,16 +111,25 @@ const SignIn = () => {
             )}
           </div>
 
-          {/* পাসওয়ার্ড ইনপুট ফিল্ড (টগল বাটন সহ) */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">
-              Password
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <Link
+                href="/auth/forgot-password"
+                className="text-xs font-medium text-[#4F46E5] hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <div className="relative flex items-center">
               <input
-                type={showPassword ? "text" : "password"} // স্টেটের ওপর ভিত্তি করে টাইপ চেঞ্জ হবে
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
-                {...register("password", { required: "Password is required" })}
+                {...register("password", {
+                  required: "Password is required",
+                })}
                 aria-invalid={errors.password ? "true" : "false"}
                 className={`w-full px-4 py-3 pr-16 rounded-xl border text-sm transition-all outline-none ${
                   errors.password
@@ -89,17 +137,14 @@ const SignIn = () => {
                     : "border-gray-200 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5]"
                 }`}
               />
-
-              {/* পাসওয়ার্ড শো/হাইড টেক্সট বাটন */}
               <button
-                type="button" // এটি অত্যন্ত জরুরি যাতে ফর্ম সাবমিট না হয়ে যায়
+                type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 text-xs font-semibold text-gray-500 hover:text-[#4F46E5] transition-colors select-none uppercase tracking-wider"
               >
                 {showPassword ? "Hide" : "Show"}
               </button>
             </div>
-
             {errors.password && (
               <p
                 role="alert"
@@ -110,24 +155,23 @@ const SignIn = () => {
             )}
           </div>
 
-          {/* সাবমিট বাটন */}
           <button
             type="submit"
-            className="w-full bg-[#4F46E5] text-white py-3 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition shadow-sm"
+            disabled={loading}
+            className=" cursor-pointer w-full bg-[#4F46E5] text-white py-3 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Sign In
+            {loading ? "Signing In..." : "Sign In"}
           </button>
         </form>
 
-        {/* নিচের রেজিস্টার লিংক */}
         <div className="text-center pt-2">
           <p className="text-sm text-gray-500">
-            Don't have an account?{" "}
+            Don't have an account?
             <Link
               className="text-[#4F46E5] font-medium hover:underline transition-colors"
               href="/auth/signup"
             >
-              Please Register
+              Sign Up
             </Link>
           </p>
         </div>

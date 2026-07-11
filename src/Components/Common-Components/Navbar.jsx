@@ -6,6 +6,7 @@ import { useState } from "react";
 import { HiDotsVertical } from "react-icons/hi";
 import { RxCross2 } from "react-icons/rx";
 import { usePathname } from "next/navigation";
+import { useUser } from "@/Custom-Hooks/useUser";
 
 const navLinks = [
   { name: "Home", href: "/" },
@@ -17,7 +18,8 @@ const navLinks = [
 
 const Navbar = () => {
   const { fullLogo, logoIcon } = logo();
-
+  const { user } = useUser();
+  console.log(user);
   const [mobileClick, setMobileClick] = useState(false);
   const patheName = usePathname();
   // console.log(patheName);
@@ -57,6 +59,18 @@ const Navbar = () => {
               className="bg-[#4F46E5] py-3 px-5 flex items-center justify-center text-white font-bold rounded-xl"
             >
               Get Started
+            </Link>
+          </div>
+
+          <div>
+            <h2>Hi, {user?.name}</h2>
+            <Link href={"/"}>
+              <Image
+                src={user?.image}
+                alt={user?.name || "User profile"}
+                width={40}
+                height={40}
+              ></Image>
             </Link>
           </div>
 

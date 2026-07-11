@@ -6,12 +6,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { signUp } from "@/lib/auth-client";
-import { useRouter } from "next/navigation"; // রিডাইরেক্টের জন্য
-import Swal from "sweetalert2"; // SweetAlert ইম্পোর্ট করা হলো
+import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
 
 const SignUp = () => {
   const { logoWithIcon } = logo();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const {
@@ -21,12 +22,12 @@ const SignUp = () => {
   } = useForm();
 
   const onSubmit = async (data) => {
+    setLoading(true);
     try {
       const imgFile = data.photo[0];
       const formData = new FormData();
       formData.append("image", imgFile);
 
-      // ImgBB-তে ইমেজ আপলোড
       const imgbbRes = await fetch(
         `https://api.imgbb.com/1/upload?key=d11b800a59dcca4d8f9ddb86c014f5f7`,
         {
@@ -37,17 +38,17 @@ const SignUp = () => {
       const imgbbData = await imgbbRes.json();
       const photoURL = imgbbData.data.url;
 
-      // Better Auth-এর মাধ্যমে সাইন আপ
       const { data: response, error } = await signUp.email({
         email: data.email,
         password: data.password,
         name: data.name,
         image: photoURL,
         role: "user",
+        plan: "free",
       });
 
       if (error) {
-        console.error("SignUp Error:", error); // এটা যোগ করুন
+        console.error("SignUp Error:", error);
         Swal.fire({
           icon: "error",
           title: "Sign Up Failed",
@@ -56,11 +57,20 @@ const SignUp = () => {
         return;
       }
 
+      await Swal.fire({
+        icon: "success",
+        title: "Account Created!",
+        text: "Your Account Create Successfully",
+        timer: 2000,
+        showConfirmButton: false,
+      });
       router.push("/");
 
       console.log("From Data", response);
     } catch (error) {
       console.error("Error From", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,16 +78,7 @@ const SignUp = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8 py-12">
       <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-100 space-y-8">
         <div className="flex flex-col items-center text-center space-y-3">
-          {logoWithIcon && (
-            <div className="relative w-12 h-12">
-              <Image
-                src={logoWithIcon}
-                alt="ParcelFlow Logo"
-                fill
-                className="object-contain"
-              />
-            </div>
-          )}
+          <Image src={logoWithIcon}></Image>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
             Create your Account
           </h1>
@@ -205,9 +206,9 @@ const SignUp = () => {
 
           <button
             type="submit"
-            className="w-full bg-[#4F46E5] text-white py-3 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition shadow-sm"
+            className=" cursor-pointer w-full bg-[#4F46E5] text-white py-3 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition shadow-sm"
           >
-            Sign Up
+            {loading ? "Submiting" : "Sign Up"}
           </button>
         </form>
 
