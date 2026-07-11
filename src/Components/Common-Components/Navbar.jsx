@@ -2,11 +2,13 @@
 import Image from "next/image";
 import logo from "../logo/logo";
 import Link from "next/link";
-import { useState } from "react";
+import { use, useState } from "react";
 import { HiDotsVertical } from "react-icons/hi";
 import { RxCross2 } from "react-icons/rx";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useUser } from "@/Custom-Hooks/useUser";
+import { createAuthClient } from "better-auth/react";
+import Swal from "sweetalert2";
 
 const navLinks = [
   { name: "Home", href: "/" },
@@ -17,12 +19,33 @@ const navLinks = [
 ];
 
 const Navbar = () => {
-  const { fullLogo, logoIcon } = logo();
+  const { fullLogo } = logo();
+  const { signOut } = createAuthClient();
   const { user } = useUser();
   console.log(user);
   const [mobileClick, setMobileClick] = useState(false);
   const patheName = usePathname();
-  // console.log(patheName);
+  const router = useRouter();
+
+  const handleSignOut = () => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes",
+    }).then((result) => {
+      if (result.isConfirmed) signOut();
+      Swal.fire({
+        title: "You are Signout",
+        text: "You Are Signout Successfully.",
+        icon: "success",
+      });
+      router.push("/auth/signin");
+    });
+  };
 
   return (
     <nav className="w-full sticky top-0 z-50 bg-white">
@@ -47,32 +70,34 @@ const Navbar = () => {
           })}
         </div>
         <div className="flex items-center gap-4 text-sm font-medium justify-self-end">
-          <div className="hidden md:flex items-center gap-4">
-            <Link
-              href="/auth/signin"
-              className="text-gray-700 hover:text-gray-900"
-            >
-              Signin
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="bg-[#4F46E5] py-3 px-5 flex items-center justify-center text-white font-bold rounded-xl"
-            >
-              Get Started
-            </Link>
-          </div>
-
-          <div>
-            <h2>Hi, {user?.name}</h2>
-            <Link href={"/"}>
-              <Image
-                src={user?.image}
-                alt={user?.name || "User profile"}
-                width={40}
-                height={40}
-              ></Image>
-            </Link>
-          </div>
+          {user ? (
+            <div className="flex items-center justify-center gap-5">
+              <div>
+                <h2 className="font-bold"> {user?.name}</h2>
+              </div>
+              <button
+                className="bg-red-500 text-white font-bold py-2 px-5 rounded-2xl cursor-pointer"
+                onClick={handleSignOut}
+              >
+                Signout
+              </button>
+            </div>
+          ) : (
+            <div className="hidden md:flex items-center gap-4">
+              <Link
+                href="/auth/signin"
+                className="text-gray-700 hover:text-gray-900"
+              >
+                Signin
+              </Link>
+              <Link
+                href="/auth/signup"
+                className="bg-[#4F46E5] py-3 px-5 flex items-center justify-center text-white font-bold rounded-xl"
+              >
+                Get Started
+              </Link>
+            </div>
+          )}
 
           <button
             onClick={() => setMobileClick(!mobileClick)}
